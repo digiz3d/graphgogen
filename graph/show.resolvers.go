@@ -9,6 +9,7 @@ import (
 
 	"github.com/digiz3d/graphgogen/graph/generated"
 	"github.com/digiz3d/graphgogen/graph/model"
+	"github.com/google/uuid"
 )
 
 func (r *mutationResolver) CreateShow(ctx context.Context, input model.CreateShowInput) (*model.CreateShowPayload, error) {
@@ -22,7 +23,7 @@ func (r *mutationResolver) CreateShow(ctx context.Context, input model.CreateSho
 		return nil, fmt.Errorf("user not found")
 	}
 
-	show := &model.Show{ID: "1", Name: input.Name, Description: input.Description, User: foundUser}
+	show := &model.Show{ID: uuid.NewString(), Name: input.Name, Description: input.Description, UserID: foundUser.ID}
 
 	if r.shows == nil {
 		r.shows = make(map[string]*model.Show)
@@ -40,7 +41,11 @@ func (r *queryResolver) Show(ctx context.Context, id string) (*model.Show, error
 }
 
 func (r *showResolver) User(ctx context.Context, obj *model.Show) (*model.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	user := r.users[obj.UserID]
+	if user == nil {
+		return nil, fmt.Errorf("user not found")
+	}
+	return user, nil
 }
 
 // Show returns generated.ShowResolver implementation.

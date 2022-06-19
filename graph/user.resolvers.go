@@ -9,20 +9,16 @@ import (
 
 	"github.com/digiz3d/graphgogen/graph/generated"
 	"github.com/digiz3d/graphgogen/graph/model"
+	"github.com/google/uuid"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.CreateUserPayload, error) {
-	newUser := &model.User{
-		ID:       "1",
-		Username: "ok",
-		Shows:    []*model.Show{},
-	}
+	newUser := &model.User{ID: uuid.NewString(), Username: "ok"}
 	if r.users == nil {
 		r.users = make(map[string]*model.User)
 	}
-
 	r.users[newUser.ID] = newUser
-	return &model.CreateUserPayload{User: newUser}, nil
+	return &model.CreateUserPayload{User: r.users[newUser.ID]}, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
@@ -34,7 +30,15 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 }
 
 func (r *userResolver) Shows(ctx context.Context, obj *model.User) ([]*model.Show, error) {
-	return []*model.Show{}, nil
+	shows := make([]*model.Show, 0)
+
+	for _, currentShow := range r.shows {
+		if currentShow.UserID == obj.ID {
+			shows = append(shows, currentShow)
+		}
+	}
+
+	return shows, nil
 }
 
 // User returns generated.UserResolver implementation.
