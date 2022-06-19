@@ -11,7 +11,7 @@ import (
 	"github.com/digiz3d/graphgogen/graph/model"
 )
 
-func (r *mutationResolver) CreateUser(ctx context.Context, username string) (*model.User, error) {
+func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.CreateUserPayload, error) {
 	newUser := &model.User{
 		ID:       "1",
 		Username: "ok",
@@ -22,7 +22,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, username string) (*mo
 	}
 
 	r.users[newUser.ID] = newUser
-	return newUser, nil
+	return &model.CreateUserPayload{User: newUser}, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {

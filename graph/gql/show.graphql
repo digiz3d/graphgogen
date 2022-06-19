@@ -9,6 +9,16 @@ extend type Query {
   show(id: ID!): Show!
 }
 
+input CreateShowInput {
+  name: String!
+  description: String
+  userId: ID!
+}
+
+type CreateShowPayload {
+  show: Show!
+}
+
 extend type Mutation {
-  createShow(name: String!, description: String!, userId: ID!): Show!
+  createShow(input: CreateShowInput!): CreateShowPayload!
 }

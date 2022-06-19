@@ -11,24 +11,24 @@ import (
 	"github.com/digiz3d/graphgogen/graph/model"
 )
 
-func (r *mutationResolver) CreateShow(ctx context.Context, name string, description string, userID string) (*model.Show, error) {
+func (r *mutationResolver) CreateShow(ctx context.Context, input model.CreateShowInput) (*model.CreateShowPayload, error) {
 	if r.users == nil {
 		r.users = make(map[string]*model.User)
 	}
 
-	foundUser := r.users[userID]
+	foundUser := r.users[input.UserID]
 
 	if foundUser == nil {
 		return nil, fmt.Errorf("user not found")
 	}
 
-	show := &model.Show{ID: "1", Name: name, Description: description, User: foundUser}
+	show := &model.Show{ID: "1", Name: input.Name, Description: input.Description, User: foundUser}
 
 	if r.shows == nil {
 		r.shows = make(map[string]*model.Show)
 	}
 	r.shows[show.ID] = show
-	return show, nil
+	return &model.CreateShowPayload{Show: show}, nil
 }
 
 func (r *queryResolver) Show(ctx context.Context, id string) (*model.Show, error) {
@@ -40,7 +40,7 @@ func (r *queryResolver) Show(ctx context.Context, id string) (*model.Show, error
 }
 
 func (r *showResolver) User(ctx context.Context, obj *model.Show) (*model.User, error) {
-	return nil, nil
+	panic(fmt.Errorf("not implemented"))
 }
 
 // Show returns generated.ShowResolver implementation.
