@@ -14,15 +14,12 @@ import (
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserInput) (*model.CreateUserPayload, error) {
 	newUser := &model.User{ID: uuid.NewString(), Username: "ok"}
-	if r.users == nil {
-		r.users = make(map[string]*model.User)
-	}
-	r.users[newUser.ID] = newUser
-	return &model.CreateUserPayload{User: r.users[newUser.ID]}, nil
+	r.UsersRepository[newUser.ID] = newUser
+	return &model.CreateUserPayload{User: r.UsersRepository[newUser.ID]}, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
-	user := r.users[id]
+	user := r.UsersRepository[id]
 	if user == nil {
 		return nil, fmt.Errorf("user not found")
 	}
@@ -32,7 +29,7 @@ func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error
 func (r *userResolver) Shows(ctx context.Context, obj *model.User) ([]*model.Show, error) {
 	shows := make([]*model.Show, 0)
 
-	for _, currentShow := range r.shows {
+	for _, currentShow := range r.ShowsRepository {
 		if currentShow.UserID == obj.ID {
 			shows = append(shows, currentShow)
 		}
