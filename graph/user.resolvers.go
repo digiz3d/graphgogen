@@ -10,6 +10,10 @@ import (
 	"github.com/digiz3d/graphgogen/graph/model"
 )
 
+func (r *mutationResolver) CreateUser(ctx context.Context, username string) (*model.User, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
 	panic(fmt.Errorf("not implemented"))
 }
