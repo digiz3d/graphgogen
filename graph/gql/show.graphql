@@ -8,3 +8,7 @@ type Show {
 extend type Query {
   show(id: ID!): Show!
 }
+
+extend type Mutation {
+  createShow(name: String!, description: String!, userId: ID!): Show!
+}
