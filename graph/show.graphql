@@ -1,0 +1,10 @@
+type Show {
+  id: ID!
+  name: String!
+  description: String
+  user: User!
+}
+
+extend type Query {
+  show(id: ID!): Show!
+}
