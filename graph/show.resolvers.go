@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"time"
 
 	"github.com/digiz3d/graphgogen/graph/generated"
 	"github.com/digiz3d/graphgogen/graph/model"
@@ -52,19 +53,25 @@ func (r *showResolver) User(ctx context.Context, obj *model.Show) (*model.User, 
 }
 
 func (r *subscriptionResolver) OnCreateShow(ctx context.Context) (<-chan *model.CreateShowPayload, error) {
-	id := "thesubkiri" + strconv.Itoa(rand.Int())
-
+	subscriptionId := "subscription-" + strconv.Itoa(rand.Int())
 	channel := make(chan *model.CreateShowPayload, 1)
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		channel <- &model.CreateShowPayload{Show: &model.Show{ID: "the subkiri " + strconv.Itoa(rand.Int()), Name: "Two seconds"}}
+		time.Sleep(8 * time.Second)
+		channel <- &model.CreateShowPayload{Show: &model.Show{ID: "two " + strconv.Itoa(rand.Int()), Name: "Eight secondsé"}}
+	}()
 
 	go func() {
 		<-ctx.Done()
 		r.Mu.Lock()
-		delete(r.ShowCreationObservers, id)
+		delete(r.ShowCreationObservers, subscriptionId)
 		r.Mu.Unlock()
 	}()
 
 	r.Mu.Lock()
-	r.ShowCreationObservers[id] = channel
+	r.ShowCreationObservers[subscriptionId] = channel
 	r.Mu.Unlock()
 
 	return channel, nil
