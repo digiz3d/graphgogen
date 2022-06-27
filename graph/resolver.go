@@ -1,8 +1,14 @@
 package graph
 
-import "github.com/digiz3d/graphgogen/graph/model"
+import (
+	"sync"
+
+	"github.com/digiz3d/graphgogen/graph/model"
+)
 
 type Resolver struct {
-	ShowsRepository map[string]*model.Show
-	UsersRepository map[string]*model.User
+	ShowsRepository       map[string]*model.Show
+	UsersRepository       map[string]*model.User
+	ShowCreationObservers map[string]chan *model.CreateShowPayload
+	Mu                    sync.Mutex
 }

@@ -22,3 +22,7 @@ type CreateShowPayload {
 extend type Mutation {
   createShow(input: CreateShowInput!): CreateShowPayload!
 }
+
+extend type Subscription {
+  onCreateShow: CreateShowPayload!
+}
