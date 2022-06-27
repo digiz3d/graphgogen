@@ -6,8 +6,6 @@ require (
 	github.com/99designs/gqlgen v0.17.10
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/graph-gophers/graphql-go v1.4.0
-	github.com/graph-gophers/graphql-transport-ws v0.0.2
 	github.com/rs/cors v1.8.2
 	github.com/vektah/gqlparser/v2 v2.4.5
 )
