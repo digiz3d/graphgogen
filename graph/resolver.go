@@ -1,14 +1,12 @@
 package graph
 
 import (
-	"sync"
-
 	"github.com/digiz3d/graphgogen/graph/model"
+	goredis "github.com/go-redis/redis/v9"
 )
 
 type Resolver struct {
-	ShowsRepository       map[string]*model.Show
-	UsersRepository       map[string]*model.User
-	ShowCreationObservers map[string]chan *model.CreateShowPayload
-	Mu                    sync.Mutex
+	ShowsRepository map[string]*model.Show
+	UsersRepository map[string]*model.User
+	Redis           *goredis.Client
 }

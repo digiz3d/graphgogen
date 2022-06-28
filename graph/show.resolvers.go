@@ -6,13 +6,13 @@ package graph
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"strconv"
-	"time"
+	"log"
 
 	"github.com/digiz3d/graphgogen/graph/generated"
 	"github.com/digiz3d/graphgogen/graph/model"
+	protogen "github.com/digiz3d/graphgogen/protobuf/generated"
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/proto"
 )
 
 func (r *mutationResolver) CreateShow(ctx context.Context, input model.CreateShowInput) (*model.CreateShowPayload, error) {
@@ -27,11 +27,12 @@ func (r *mutationResolver) CreateShow(ctx context.Context, input model.CreateSho
 	r.ShowsRepository[show.ID] = show
 	createShowPayload := &model.CreateShowPayload{Show: show}
 
-	r.Mu.Lock()
-	for _, observer := range r.ShowCreationObservers {
-		observer <- createShowPayload
+	event := &protogen.ShowCreatedEvent{Id: show.ID}
+	bytes, err := proto.Marshal(event)
+	if err != nil {
+		fmt.Println("mince alors")
 	}
-	r.Mu.Unlock()
+	r.Redis.Publish(ctx, SHOW_CREATED, bytes)
 
 	return createShowPayload, nil
 }
@@ -53,26 +54,31 @@ func (r *showResolver) User(ctx context.Context, obj *model.Show) (*model.User, 
 }
 
 func (r *subscriptionResolver) OnCreateShow(ctx context.Context) (<-chan *model.CreateShowPayload, error) {
-	subscriptionId := "subscription-" + strconv.Itoa(rand.Int())
 	channel := make(chan *model.CreateShowPayload, 1)
 
 	go func() {
-		time.Sleep(2 * time.Second)
-		channel <- &model.CreateShowPayload{Show: &model.Show{ID: "the subkiri " + strconv.Itoa(rand.Int()), Name: "Two seconds"}}
-		time.Sleep(8 * time.Second)
-		channel <- &model.CreateShowPayload{Show: &model.Show{ID: "two " + strconv.Itoa(rand.Int()), Name: "Eight secondsé"}}
+		sub := r.Redis.Subscribe(ctx, SHOW_CREATED)
+		_, err := sub.Receive(ctx)
+		if err != nil {
+			return
+		}
+		ch := sub.Channel()
+		for {
+			select {
+			case message := <-ch:
+				var event protogen.ShowCreatedEvent
+				err := proto.Unmarshal([]byte(message.Payload), &event)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				channel <- &model.CreateShowPayload{Show: &model.Show{ID: event.Id}}
+			case <-ctx.Done():
+				sub.Close()
+				return
+			}
+		}
 	}()
-
-	go func() {
-		<-ctx.Done()
-		r.Mu.Lock()
-		delete(r.ShowCreationObservers, subscriptionId)
-		r.Mu.Unlock()
-	}()
-
-	r.Mu.Lock()
-	r.ShowCreationObservers[subscriptionId] = channel
-	r.Mu.Unlock()
 
 	return channel, nil
 }
@@ -81,3 +87,11 @@ func (r *subscriptionResolver) OnCreateShow(ctx context.Context) (<-chan *model.
 func (r *Resolver) Show() generated.ShowResolver { return &showResolver{r} }
 
 type showResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+const SHOW_CREATED = "SHOW_CREATED"

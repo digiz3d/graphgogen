@@ -15,6 +15,7 @@ import (
 	"github.com/digiz3d/graphgogen/graph"
 	"github.com/digiz3d/graphgogen/graph/generated"
 	"github.com/digiz3d/graphgogen/graph/model"
+	goredis "github.com/go-redis/redis/v9"
 	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 )
@@ -22,10 +23,13 @@ import (
 const defaultPort = "3000"
 
 func main() {
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
+	}
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "localhost:6379"
 	}
 
 	c := cors.New(cors.Options{
@@ -33,10 +37,12 @@ func main() {
 		AllowCredentials: true,
 	})
 
+	redis := goredis.NewClient(&goredis.Options{Addr: redisAddr, ReadTimeout: time.Second * 60})
+
 	srv := handler.New(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-		ShowsRepository:       make(map[string]*model.Show),
-		UsersRepository:       make(map[string]*model.User),
-		ShowCreationObservers: make(map[string]chan *model.CreateShowPayload),
+		ShowsRepository: make(map[string]*model.Show),
+		UsersRepository: make(map[string]*model.User),
+		Redis:           redis,
 	}}))
 
 	srv.AddTransport(transport.POST{})
